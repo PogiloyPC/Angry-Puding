@@ -53,7 +53,7 @@ public class Health : MonoBehaviour
         }               
         checkSafePoint = Physics2D.OverlapCircle(new Vector2(transform.position.x, transform.position.y + 0.12f), radiusCircle, LayerMask.GetMask("Checkpoint"));
         Collider2D check = Physics2D.OverlapCircle(new Vector2(transform.position.x, transform.position.y + 0.12f), radiusCircle, LayerMask.GetMask("Checkpoint"));
-        if (checkSafePoint == true && check.GetComponent<Checkpoint>().activeCheckpoint == false && check.GetComponent<Checkpoint>().ropeLine == true)
+        if (checkSafePoint == true && check.GetComponent<Checkpoint>().activeCheckpoint == false && check.GetComponent<Checkpoint>().ropeLine == false)
         {
             buttonActiveCheckpoint.SetActive(true);
             buttonActiveCheckpoint.transform.position = new Vector2(check.transform.position.x, check.transform.position.y + distanceButton);

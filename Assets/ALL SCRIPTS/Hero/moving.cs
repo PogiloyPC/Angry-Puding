@@ -9,6 +9,7 @@ public class moving : MonoBehaviour
     public float jump;
     public float defoltJump; 
     public bool grounded;
+    public bool movingHero;
     [Header("CheckGround")]
     private RaycastHit2D ray;
     public float rayDistance;
@@ -27,36 +28,67 @@ public class moving : MonoBehaviour
     }
 
     void Update()
+    {                
+        StatePlayer();   
+    }
+
+    private void FixedUpdate()
     {
-        anim.SetBool("moving", false);
         ray = Physics2D.BoxCast(boxCollider.bounds.center + transform.up * rayDistanceY * transform.localScale.y * colliderDistance,
         new Vector3(boxCollider.bounds.size.x * rayDistance, boxCollider.bounds.size.y * rayDistanceY, boxCollider.bounds.size.z),
         0, Vector2.left, 0, LayerMask.GetMask("Ground"));
-        if (Input.GetKey(KeyCode.D))
+        MovingPlayer();
+    }
+
+    public void StatePlayer()
+    {
+        if (Input.GetKeyDown(KeyCode.D))
         {
-            body.velocity = new Vector3(speed, body.velocity.y);                               
-            transform.localScale = new Vector3(1, 1, 1);            
             anim.SetBool("moving", true);
-        }              
-        if (Input.GetKey(KeyCode.A))
+            transform.localScale = new Vector3(1, 1, 1);
+            movingHero = true;
+        }
+        if (Input.GetKeyUp(KeyCode.D))
         {
-            body.velocity = new Vector3(-speed, body.velocity.y);         
+            movingHero = false;
+            anim.SetBool("moving", false);
+        }
+        if (Input.GetKeyDown(KeyCode.A))
+        {
             transform.localScale = new Vector3(-1, 1, 1);
             anim.SetBool("moving", true);
-        }                
+            movingHero = true;
+        }
+        if (Input.GetKeyUp(KeyCode.A))
+        {
+            movingHero = false;
+            anim.SetBool("moving", false);
+        }
         if (Input.GetKeyDown(KeyCode.W) && grounded == true)
-        {     
-                JUmp();   
+        {
+            JUmp();
+        }
+    }
+
+    public void MovingPlayer()
+    {
+        if (Input.GetKey(KeyCode.D))
+        {
+            body.velocity = new Vector3(speed, body.velocity.y);                                   
         }        
+        if (Input.GetKey(KeyCode.A))
+        {
+            body.velocity = new Vector3(-speed, body.velocity.y);            
+        }                
         if (ray.collider != null)
         {
             grounded = true;
-        }            
+        }
         else
         {
             grounded = false;
-        }        
-    }    
+        }
+    }
 
     public void JUmp()
     {

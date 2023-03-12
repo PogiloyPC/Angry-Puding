@@ -94,12 +94,12 @@ public class Inventori : MonoBehaviour
             if (!takeCheck)
             {
                 takeCheck = true;
-                //this.gameObject.GetComponent<HingeJoint2D>().connectedBody = check.GetComponent<Rigidbody2D>();
+                check.gameObject.GetComponent<Checkpoint>().ropeLine = true;
             }
             else
-            {
-                //this.gameObject.GetComponent<HingeJoint>().connectedBody = null;
+            {                
                 takeCheck = false;
+                check.gameObject.GetComponent<Checkpoint>().ropeLine = false;
             }
         }
         if (takeCheck == true)

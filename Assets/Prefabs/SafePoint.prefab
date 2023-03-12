@@ -278,7 +278,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 47893284104436737}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -11.960668, y: -1.9501715, z: -3.4901302}
+  m_LocalPosition: {x: -11.82, y: -1.948, z: -3.4901302}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -327,7 +327,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 1942875264, guid: d377cf36ab8691040b9d56c97721dba9, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -471,7 +471,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 47893285070684879}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -11.966, y: -1.9550002, z: -0.2897501}
+  m_LocalPosition: {x: -11.82, y: -1.948, z: -0.2897501}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -585,7 +585,7 @@ MonoBehaviour:
   - {fileID: 47893283621786673}
   startPos: {fileID: 47893284104436737}
   healthCell: 0
-  ropeLine: 1
+  ropeLine: 0
   activeCheckpoint: 0
 --- !u!50 &4832123226451873676
 Rigidbody2D:

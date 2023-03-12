@@ -1,112 +1,187 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 
 public class Checkpoint : MonoBehaviour
 {
     [SerializeField] private GameObject rope;
-    [SerializeField] private List<GameObject> masRope = new List<GameObject>();
-    [SerializeField] private List<float> masDist = new List<float>();
-    [SerializeField] private List<float> masDist2 = new List<float>();
     [SerializeField] public GameObject[] Cell;
     [SerializeField] private GameObject startPos;
+    [SerializeField] private HingeJoint2D hingeCheckP;
+    [SerializeField] private DistanceJoint2D distCheckP;
+    [SerializeField] private LayerMask layerMask;
+    private Rigidbody2D rbStartP;
+    private moving hero;
     public float healthCell = 0f;
-    public bool ropeLine = true;
-    public bool activeCheckpoint;
+    public bool ropeLine;
+    public bool activeCheckpoint;   
+    [Header("ListDistance")]
+    private List<float> masDist = new List<float>();
+    private List<float> masDist2 = new List<float>();
+    [Header("ListRope")]
+    [SerializeField] private List<HingeJoint2D> masRope = new List<HingeJoint2D>();
+    private List<SpriteRenderer> colorRope = new List<SpriteRenderer>();
+    private List<Rigidbody2D> rbRope = new List<Rigidbody2D>();
+    [Header("RayCastDist")]
+    public float rayDistance;
+    public float rayDistanceY;
+    [SerializeField] private BoxCollider2D boxCollider;
+    [SerializeField] private float colliderDistance;
 
     public void Start()
     {
+        rbStartP = startPos.GetComponent<Rigidbody2D>();
+        hero = GameObject.Find("Hero").GetComponent<moving>();
         transform.position = startPos.transform.position;
         float dist = Vector2.Distance(startPos.transform.position, transform.position);        
         for (int i = 0; i < 150; i++)
         {
-            masDist.Add(dist += 0.02f);
-            Debug.Log(masDist[i]);
+            masDist.Add(dist += 0.06f);            
         }
     }
 
-    public void Update()
+    private void Update()
+    {
+    }
+
+    public void FixedUpdate()
+    {        
+        RaycastHit2D hit = Physics2D.BoxCast(boxCollider.bounds.center + transform.up * rayDistanceY * transform.localScale.y * colliderDistance,
+        new Vector3(boxCollider.bounds.size.x * rayDistance, boxCollider.bounds.size.y * rayDistanceY, boxCollider.bounds.size.z),
+        0, Vector2.left, 0, LayerMask.GetMask("Ground"));
+        if (hit.collider.gameObject.GetComponent<Ground>() && ropeLine)
+        {
+            distCheckP.connectedAnchor = hit.point - new Vector2(hit.collider.gameObject.transform.position.x, hit.collider.gameObject.transform.position.y);
+            distCheckP.autoConfigureDistance = true;
+        }
+        if (!ropeLine)
+        {
+            distCheckP.autoConfigureDistance = false;
+            distCheckP.distance = 0.001f;
+        }
+        FindDistance();
+    }
+
+    public void FindDistance()
     {
         float dist = Vector2.Distance(startPos.transform.position, transform.position);
-        for (int i = 0; i < masDist.Count; i++)
+        if (ropeLine && hero.movingHero == true)
         {
-            if (masDist[i] < dist)
+            for (int i = 0; i < masDist.Count; i++)
             {
-                masDist2.Add(masDist[i]);
-                masDist.RemoveAt(i);
-                CreateRopeLine();                
+                if (masDist[i] < dist)
+                {
+                    masDist2.Add(masDist[i]);
+                    masDist.RemoveAt(i);
+                    CreateRopeLine();
+                }
+            }
+            for (int i = 0; i < masDist2.Count; i++)
+            {
+                if (masDist2[i] > dist)
+                {
+                    masDist.Add(masDist2[i]);
+                    masDist2.RemoveAt(i);
+                    DeleteRopeLine();
+                }
             }
         }
-        for (int i = 0; i < masDist2.Count; i++)
-        {
-            if (masDist2[i] > dist)
-            {
-                masDist.Add(masDist2[i]);
-                masDist2.RemoveAt(i);
-                DeleteRopeLine();
-            }
-        }
-    }
-    
+    }   
+       
     public void CreateRopeLine()
     {
+        GameObject rope = Instantiate(this.rope, transform.position, Quaternion.identity) as GameObject;                        
+        masRope.Add(rope.GetComponent<HingeJoint2D>());
+        colorRope.Add(rope.GetComponent<SpriteRenderer>());
+        rbRope.Add(rope.GetComponent<Rigidbody2D>());
         if (ropeLine && !activeCheckpoint)
         {            
-            GameObject rope = Instantiate(this.rope, transform.position, Quaternion.identity) as GameObject;            
-            masRope.Add(rope);
             for (int i = 0; i < masRope.Count; i++)
-            {
-                masRope[i].GetComponent<HingeJoint2D>().anchor = new Vector2(0.5f, 0f);
-                masRope[i].GetComponent<HingeJoint2D>().connectedAnchor = new Vector2(0.001000007f, -0.07917771f);                               
+            {                
+                if (masRope.Count < 1)
+                {
+                    hingeCheckP.connectedBody = rbStartP;
+                }
                 if (masRope.Count > 1)
                 {
-                    masRope[0].GetComponent<HingeJoint2D>().connectedBody = startPos.GetComponent<Rigidbody2D>();
-                    masRope[i + 1].GetComponent<HingeJoint2D>().connectedBody = masRope[i].GetComponent<Rigidbody2D>();
-                    this.gameObject.GetComponent<HingeJoint2D>().connectedBody = masRope[masRope.Count - 1].GetComponent<Rigidbody2D>();                    
+                    masRope[0].connectedBody = rbStartP;
+                    masRope[i + 1].connectedBody = rbRope[i];
+                    hingeCheckP.connectedBody = rbRope[rbRope.Count - 1];                    
                 }                
+                if (masRope.Count < 135 && colorRope[i].color != Color.green)
+                {
+                    colorRope[i].color = Color.green;
+                }
+                if (masRope.Count >= 135)
+                {
+                    ColorRope();
+                }               
             }
         }
-    }
+    }    
 
     public void DeleteRopeLine()
     {
+        Destroy(masRope[0].gameObject);
+        masRope.RemoveAt(0);
+        rbRope.RemoveAt(0);
+        colorRope.RemoveAt(0);
         if (ropeLine && !activeCheckpoint)
         {
-            Destroy(masRope[0].gameObject);
-            masRope.RemoveAt(0);
             for (int i = 0; i < masRope.Count; i++)
             {
-                if (masRope.Count == 0)
+                if (masRope.Count < 1)
                 {
-                    this.gameObject.GetComponent<HingeJoint2D>().connectedBody = startPos.GetComponent<Rigidbody2D>();
-                }
-                if (masRope.Count == 1)
+                    hingeCheckP.connectedBody = rbStartP;
+                }               
+                if (masRope.Count >= 1)
                 {
-                    masRope[i].GetComponent<HingeJoint2D>().connectedBody = startPos.GetComponent<Rigidbody2D>();
-                    this.gameObject.GetComponent<HingeJoint2D>().connectedBody = masRope[i].GetComponent<Rigidbody2D>();
-                }
-                if (masRope.Count > 1)
-                {
-                    this.gameObject.GetComponent<HingeJoint2D>().connectedBody = masRope[masRope.Count - 1].GetComponent<Rigidbody2D>();
-                    masRope[i + 1].GetComponent<HingeJoint2D>().connectedBody = masRope[i].GetComponent<Rigidbody2D>();
-                    masRope[0].GetComponent<HingeJoint2D>().connectedBody = startPos.GetComponent<Rigidbody2D>();
+                    hingeCheckP.connectedBody = rbRope[rbRope.Count - 1];
+                    masRope[i + 1].connectedBody = rbRope[i];
+                    masRope[0].connectedBody = rbStartP;
                 }
             }
         }
     }
 
-    public void ActiveCheckpoint()
-    {
-        if (ropeLine)
+    public void ColorRope()
+    {       
+        for (int i = 0; i < masRope.Count; i++)
         {
-            foreach (GameObject i in Cell)
+
+            if (masRope.Count >= 135 && masRope.Count < 139)
             {
-                i.SetActive(true);
+                colorRope[i].color = new Color(176, 255, 0);
             }
-            activeCheckpoint = true;
-            Invoke("DeactivatedCells", 0.5f);
+            else if (masRope.Count >= 139 && masRope.Count < 142)
+            {
+                colorRope[i].color = new Color(253, 255, 0);
+            }
+            else if (masRope.Count >= 142 && masRope.Count < 145)
+            {
+                colorRope[i].color = new Color(255, 185, 0);
+            }
+            else if (masRope.Count >= 145 && masRope.Count < 149)
+            {
+                colorRope[i].color = new Color(255, 100, 0);
+            }        
+            else if (masRope.Count >= 149)
+            {
+                colorRope[i].color = new Color(255, 5, 0);
+            }
+        }        
+    }
+
+    public void ActiveCheckpoint()
+    {       
+        foreach (GameObject i in Cell)
+        {
+            i.SetActive(true);
         }
+        activeCheckpoint = true;
+        Invoke("DeactivatedCells", 0.5f);        
     }
 
     public void DeactivatedCells()
@@ -125,12 +200,7 @@ public class Checkpoint : MonoBehaviour
             activeCheckpoint = false;
         }
         Debug.Log(healthCell);
-    }
-
-    public void CreateRope()
-    {
-        
-    }
+    }   
 
     private void OnTriggerStay2D(Collider2D collision)
     {
@@ -178,5 +248,12 @@ public class Checkpoint : MonoBehaviour
                 i.SetActive(false);
             }            
        }
+    }
+
+    public void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawCube(boxCollider.bounds.center + transform.up * rayDistanceY * transform.localScale.y * colliderDistance,
+        new Vector3(boxCollider.bounds.size.x * rayDistance, boxCollider.bounds.size.y * rayDistanceY, boxCollider.bounds.size.z));
     }
 }
